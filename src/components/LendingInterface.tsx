@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { BrowserProvider, type Signer, parseUnits, Contract } from 'ethers';
 import { PlusIcon, MinusIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { useContract } from '../hooks/useContract';
+import { useTokenBalances } from '../hooks/useTokenBalances';
 import { ASSETS } from '../contracts/addresses';
-import { parseInputAmount } from '../utils/formatters';
+import { parseInputAmount, formatBalance } from '../utils/formatters';
 
 // ERC20 ABI for token operations
 const ERC20_ABI = [
@@ -36,6 +37,7 @@ export const LendingInterface: React.FC<LendingInterfaceProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const contracts = useContract(provider, signer);
+  const { balances, loading: balancesLoading } = useTokenBalances(provider, userAddress);
 
   const handleTransaction = async () => {
     if (!contracts || !userAddress || !amount) return;
@@ -133,6 +135,38 @@ export const LendingInterface: React.FC<LendingInterfaceProps> = ({
     }
   };
 
+  const handleQuickAmount = (percentage: string) => {
+    const balance = balances[selectedAsset];
+    if (!balance) return;
+
+    const balanceNumber = parseFloat(balance.balance);
+    let targetAmount: number;
+
+    switch (percentage) {
+      case '25%':
+        targetAmount = balanceNumber * 0.25;
+        break;
+      case '50%':
+        targetAmount = balanceNumber * 0.5;
+        break;
+      case '75%':
+        targetAmount = balanceNumber * 0.75;
+        break;
+      case 'Max':
+        // For ETH, leave some for gas fees
+        if (ASSETS[selectedAsset].symbol === 'ETH') {
+          targetAmount = Math.max(0, balanceNumber - 0.01);
+        } else {
+          targetAmount = balanceNumber;
+        }
+        break;
+      default:
+        return;
+    }
+
+    setAmount(targetAmount.toString());
+  };
+
   const actionConfig = {
     supply: {
       title: 'Supply Assets',
@@ -166,6 +200,7 @@ export const LendingInterface: React.FC<LendingInterfaceProps> = ({
 
   const currentConfig = actionConfig[action];
   const IconComponent = currentConfig.icon;
+  const currentBalance = balances[selectedAsset];
 
   return (
     <div className="card">
@@ -211,6 +246,22 @@ export const LendingInterface: React.FC<LendingInterfaceProps> = ({
         </select>
       </div>
 
+      {/* Balance Display */}
+      {currentBalance && (
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">Wallet Balance:</span>
+            <span className="font-medium">
+              {balancesLoading ? (
+                <div className="animate-pulse h-4 w-16 bg-gray-200 rounded"></div>
+              ) : (
+                `${formatBalance(currentBalance.balance, 0, 6)} ${currentBalance.symbol}`
+              )}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Amount Input */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -236,15 +287,9 @@ export const LendingInterface: React.FC<LendingInterfaceProps> = ({
           {['25%', '50%', '75%', 'Max'].map((percentage) => (
             <button
               key={percentage}
-              onClick={() => {
-                // This would need actual balance data to work properly
-                // For now, just placeholder
-                const mockAmount = percentage === 'Max' ? '100' : 
-                                 percentage === '75%' ? '75' :
-                                 percentage === '50%' ? '50' : '25';
-                setAmount(mockAmount);
-              }}
-              className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors"
+              onClick={() => handleQuickAmount(percentage)}
+              disabled={!currentBalance || balancesLoading}
+              className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {percentage}
             </button>
@@ -283,7 +328,7 @@ export const LendingInterface: React.FC<LendingInterfaceProps> = ({
       {/* Action Button */}
       <button
         onClick={handleTransaction}
-        disabled={!amount || loading || !userAddress}
+        disabled={!amount || loading || !userAddress || balancesLoading}
         className={`w-full ${currentConfig.buttonColor} disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
       >
         {loading ? (

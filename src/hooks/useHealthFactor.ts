@@ -24,9 +24,26 @@ export const useHealthFactor = (
     try {
       // Get health factor
       const hf = await contracts.lendingPool.getHealthFactor(userAddress);
-      const healthFactorNumber = parseFloat(formatUnits(hf, 18));
       
-      // Get borrowing power
+      // Handle the health factor calculation properly
+      let healthFactorNumber: number;
+      
+      // Convert to string first to handle very large numbers
+      const hfString = hf.toString();
+      
+      // If the health factor is extremely large, treat it as infinity (no debt)
+      if (hfString.length > 20) {
+        healthFactorNumber = Infinity;
+      } else {
+        healthFactorNumber = parseFloat(formatUnits(hf, 18));
+        
+        // If still extremely large after formatting, set to infinity
+        if (healthFactorNumber > 1e10) {
+          healthFactorNumber = Infinity;
+        }
+      }
+      
+      // Get borrowing power and total borrows
       const [totalBorrowingPower, totalBorrowsValue] = await contracts.lendingPool.getAccountBorrowingPower(userAddress);
       const borrowingPowerUSD = parseFloat(formatUnits(totalBorrowingPower, 18));
       const totalBorrowsUSD = parseFloat(formatUnits(totalBorrowsValue, 18));
@@ -37,6 +54,11 @@ export const useHealthFactor = (
     } catch (err) {
       console.error('Error fetching health data:', err);
       setError('Failed to load health data');
+      
+      // Set default values on error
+      setHealthFactor(Infinity);
+      setBorrowingPower(0);
+      setTotalBorrows(0);
     } finally {
       setLoading(false);
     }
@@ -45,6 +67,11 @@ export const useHealthFactor = (
   useEffect(() => {
     if (userAddress && contracts) {
       fetchHealthData();
+    } else {
+      // Reset values when wallet disconnected
+      setHealthFactor(0);
+      setBorrowingPower(0);
+      setTotalBorrows(0);
     }
   }, [userAddress, contracts]);
 
