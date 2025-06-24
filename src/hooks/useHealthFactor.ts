@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
+import { BrowserProvider, type Signer, formatUnits } from 'ethers';
 import { useContract } from './useContract';
 
 export const useHealthFactor = (
-  provider: ethers.providers.Web3Provider | null,
-  signer: ethers.Signer | null,
+  provider: BrowserProvider | null,
+  signer: Signer | null,
   userAddress: string | null
 ) => {
   const [healthFactor, setHealthFactor] = useState<number>(0);
@@ -24,12 +24,12 @@ export const useHealthFactor = (
     try {
       // Get health factor
       const hf = await contracts.lendingPool.getHealthFactor(userAddress);
-      const healthFactorNumber = parseFloat(ethers.utils.formatEther(hf));
+      const healthFactorNumber = parseFloat(formatUnits(hf, 18));
       
       // Get borrowing power
       const [totalBorrowingPower, totalBorrowsValue] = await contracts.lendingPool.getAccountBorrowingPower(userAddress);
-      const borrowingPowerUSD = parseFloat(ethers.utils.formatEther(totalBorrowingPower));
-      const totalBorrowsUSD = parseFloat(ethers.utils.formatEther(totalBorrowsValue));
+      const borrowingPowerUSD = parseFloat(formatUnits(totalBorrowingPower, 18));
+      const totalBorrowsUSD = parseFloat(formatUnits(totalBorrowsValue, 18));
 
       setHealthFactor(healthFactorNumber);
       setBorrowingPower(borrowingPowerUSD);

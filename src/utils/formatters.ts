@@ -1,8 +1,8 @@
-import { ethers } from 'ethers';
+import { formatUnits, parseUnits } from 'ethers';
 
 export const formatBalance = (balance: string | number, decimals = 18, displayDecimals = 4): string => {
   try {
-    const formatted = ethers.utils.formatUnits(balance.toString(), decimals);
+    const formatted = formatUnits(balance.toString(), decimals);
     const num = parseFloat(formatted);
     
     if (num === 0) return '0';
@@ -36,7 +36,7 @@ export const formatPercentage = (value: number, decimals = 2): string => {
 export const parseInputAmount = (input: string, decimals = 18): string => {
   try {
     if (!input || input === '') return '0';
-    return ethers.utils.parseUnits(input, decimals).toString();
+    return parseUnits(input, decimals).toString();
   } catch (error) {
     throw new Error('Invalid amount');
   }

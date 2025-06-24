@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
+import { BrowserProvider, type Signer, formatUnits } from 'ethers';
 import { useContract } from './useContract';
 import { ASSETS } from '../contracts/addresses';
 import { formatBalance } from '../utils/formatters';
@@ -14,8 +14,8 @@ export interface UserPosition {
 }
 
 export const useUserPositions = (
-  provider: ethers.providers.Web3Provider | null,
-  signer: ethers.Signer | null,
+  provider: BrowserProvider | null,
+  signer: Signer | null,
   userAddress: string | null
 ) => {
   const [positions, setPositions] = useState<UserPosition[]>([]);
@@ -40,7 +40,7 @@ export const useUserPositions = (
           
           // Get asset price
           const price = await contracts.priceOracle.getAssetPrice(asset.address);
-          const priceNumber = parseFloat(ethers.utils.formatUnits(price, 8)); // Assuming 8 decimals for price
+          const priceNumber = parseFloat(formatUnits(price, 8)); // Assuming 8 decimals for price
 
           // Format amounts
           const suppliedFormatted = formatBalance(position.suppliedAmount, asset.decimals);

@@ -1,11 +1,11 @@
 import React from 'react';
-import { ethers } from 'ethers';
+import { BrowserProvider } from 'ethers';
 import { WalletIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { shortenAddress } from '../utils/formatters';
 import { NETWORK_CONFIG } from '../contracts/addresses';
 
 interface WalletConnectProps {
-  provider: ethers.providers.Web3Provider | null;
+  provider: BrowserProvider | null;
   userAddress: string | null;
   onConnect: () => void;
   onDisconnect: () => void;
