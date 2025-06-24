@@ -26,7 +26,7 @@ export const ASSETS = {
     name: 'Bitcoin',
     symbol: 'BTC',
     address: '0xf32d39ff9f6aa7a7a64d7a4f00a54826ef791a55',
-    decimals: 8,
+    decimals: 18,
   },
 } as const;
 
