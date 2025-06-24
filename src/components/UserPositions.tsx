@@ -1,6 +1,6 @@
 import React from 'react';
 import type { UserPosition } from '../hooks/useUserPositions';
-import { formatBalance, formatUSD } from '../utils/formatters';
+import { formatUSD } from '../utils/formatters';
 
 interface UserPositionsProps {
   positions: UserPosition[];

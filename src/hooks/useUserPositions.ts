@@ -33,7 +33,7 @@ export const useUserPositions = (
     try {
       const positionsData: UserPosition[] = [];
 
-      for (const [key, asset] of Object.entries(ASSETS)) {
+      for (const [, asset] of Object.entries(ASSETS)) {
         try {
           // Get user position
           const position = await contracts.lendingPoolCore.userPositions(userAddress, asset.address);
